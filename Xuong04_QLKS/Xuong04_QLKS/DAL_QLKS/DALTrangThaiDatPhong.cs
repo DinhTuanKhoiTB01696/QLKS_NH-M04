@@ -1,33 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using DTO_QLKS;
-using Microsoft.Data.SqlClient;
 
 namespace DAL_QLKS
 {
     public class TrangThaiDatPhongDAL
     {
-        public List<TrangThaiDatPhongDTO> LayDanhSach()
+        public virtual List<TrangThaiDatPhongDTO> LayDanhSach()
         {
             string sql = @"
-        SELECT 
-            ttdp.TrangThaiID,
-            ttdp.HoaDonThueID,
-            ttdp.LoaiTrangThaiID,
-            lttdp.TenTrangThai,
-            ttdp.NgayCapNhat
-        FROM TrangThaiDatPhong ttdp
-        JOIN LoaiTrangThaiDatPhong lttdp 
-            ON ttdp.LoaiTrangThaiID = lttdp.LoaiTrangThaiID";
+                SELECT 
+                    ttdp.TrangThaiID,
+                    ttdp.HoaDonThueID,
+                    ttdp.LoaiTrangThaiID,
+                    lttdp.TenTrangThai,
+                    ttdp.NgayCapNhat
+                FROM TrangThaiDatPhong ttdp
+                JOIN LoaiTrangThaiDatPhong lttdp 
+                    ON ttdp.LoaiTrangThaiID = lttdp.LoaiTrangThaiID";
 
             return DBUtil.Select<TrangThaiDatPhongDTO>(sql, null);
         }
 
-        public bool Them(TrangThaiDatPhongDTO dto)
+        public virtual bool Them(TrangThaiDatPhongDTO dto)
         {
-            string query = "INSERT INTO TrangThaiDatPhong (TrangThaiID, HoaDonThueID, LoaiTrangThaiID, NgayCapNhat) " +
-                           "VALUES (@TrangThaiID, @HoaDonThueID, @LoaiTrangThaiID, @NgayCapNhat)";
+            string query = @"
+                INSERT INTO TrangThaiDatPhong 
+                (TrangThaiID, HoaDonThueID, LoaiTrangThaiID, NgayCapNhat)
+                VALUES (@TrangThaiID, @HoaDonThueID, @LoaiTrangThaiID, @NgayCapNhat)";
+
             try
             {
                 var parameters = new Dictionary<string, object>
@@ -44,10 +45,16 @@ namespace DAL_QLKS
             catch { return false; }
         }
 
-        public bool CapNhat(TrangThaiDatPhongDTO dto)
+        public virtual bool CapNhat(TrangThaiDatPhongDTO dto)
         {
-            string query = "UPDATE TrangThaiDatPhong SET HoaDonThueID = @HoaDonThueID, LoaiTrangThaiID = @LoaiTrangThaiID, " +
-                           "NgayCapNhat = @NgayCapNhat WHERE TrangThaiID = @TrangThaiID";
+            string query = @"
+                UPDATE TrangThaiDatPhong 
+                SET 
+                    HoaDonThueID = @HoaDonThueID,
+                    LoaiTrangThaiID = @LoaiTrangThaiID,
+                    NgayCapNhat = @NgayCapNhat
+                WHERE TrangThaiID = @TrangThaiID";
+
             try
             {
                 var parameters = new Dictionary<string, object>
@@ -64,52 +71,47 @@ namespace DAL_QLKS
             catch { return false; }
         }
 
-        public bool Xoa(string id)
+        public virtual bool Xoa(string id)
         {
             string query = "DELETE FROM TrangThaiDatPhong WHERE TrangThaiID = @TrangThaiID";
             try
             {
-                var parameters = new Dictionary<string, object>
-                {
-                    { "@TrangThaiID", id }
-                };
-
+                var parameters = new Dictionary<string, object> { { "@TrangThaiID", id } };
                 DBUtil.Update(query, parameters);
                 return true;
             }
             catch { return false; }
         }
 
-        public List<TrangThaiDatPhongDTO> TimKiemTheoHoaDon(string hoaDonID)
+        public virtual List<TrangThaiDatPhongDTO> TimKiemTheoHoaDon(string hoaDonID)
         {
             string query = "SELECT * FROM TrangThaiDatPhong WHERE HoaDonThueID LIKE @HoaDonID";
-            var parameters = new Dictionary<string, object>
-            {
-                { "@HoaDonID", "%" + hoaDonID + "%" }
-            };
-
+            var parameters = new Dictionary<string, object> { { "@HoaDonID", "%" + hoaDonID + "%" } };
             return DBUtil.QueryList<TrangThaiDatPhongDTO>(query, parameters);
         }
 
-
-        public string GenerateNewTrangThaiID()
+        public virtual string GenerateNewTrangThaiID()
         {
-            DAL_QLKS.TrangThaiDatPhongDAL dal = new DAL_QLKS.TrangThaiDatPhongDAL();
-            string prefix = "TTDP";
+            const string prefix = "TTDP";
             string sql = "SELECT MAX(TrangThaiID) FROM TrangThaiDatPhong";
-            var args = new Dictionary<string, object>();
-            object result = DBUtil.ScalarQuery(sql, args);
+            object result = DBUtil.ScalarQuery(sql, null);
+
             if (result != null && result.ToString().StartsWith(prefix))
             {
-                string maxCode = result.ToString().Substring(prefix.Length);
-                if (int.TryParse(maxCode, out int number))
-                {
+                string numberPart = result.ToString().Substring(prefix.Length);
+                if (int.TryParse(numberPart, out int number))
                     return $"{prefix}{(number + 1):D3}";
-                }
             }
             return $"{prefix}001";
         }
 
-
+        public virtual string GetPhongIDByHoaDonThueID(string hoaDonThueID)
+        {
+            string sql = "SELECT PhongID FROM HoaDonThue WHERE HoaDonThueID = @HoaDonThueID";
+            var args = new Dictionary<string, object> { { "@HoaDonThueID", hoaDonThueID } };
+            var dt = DBUtil.Query(sql, args);
+            if (dt.Rows.Count > 0) return dt.Rows[0]["PhongID"].ToString();
+            return null;
+        }
     }
 }

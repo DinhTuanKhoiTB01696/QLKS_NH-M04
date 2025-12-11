@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DAL_QLKS;
 using DTO_QLKS;
 
@@ -11,59 +7,78 @@ namespace BLL_QLKS
 {
     public class BUSNhanVien
     {
-        DALNhanVien dalNhanVien = new DALNhanVien();
+        private DALNhanVien dalNhanVien;
 
-        public NhanVien DangNhap(string username, string password)
+        // ⭐ Constructor mặc định (chạy thật)
+        public BUSNhanVien()
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                return null;
-            }
-
-            return dalNhanVien.getNhanVien(username, password);
+            dalNhanVien = new DALNhanVien();
         }
 
+        // ⭐ Constructor DI dùng cho Unit Test (FakeDAL)
+        public BUSNhanVien(DALNhanVien fakeDal)
+        {
+            dalNhanVien = fakeDal;
+        }
+
+        // ==========================
+        //      CHỨC NĂNG LOGIN
+        // ==========================
+        public NhanVien DangNhap(string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                return null;
+
+            return dalNhanVien.getNhanVien(username.Trim(), password.Trim());
+        }
+
+        // ==========================
+        //      SELECT ALL
+        // ==========================
         public List<NhanVien> GetNhanVienList()
         {
             return dalNhanVien.selectAll();
         }
 
-        // ✅ Thêm phương thức này để tránh lỗi CS1061
+        // alias cho dễ dùng
         public List<NhanVien> GetAll()
         {
-            return GetNhanVienList();
+            return dalNhanVien.selectAll();
         }
 
+        // ==========================
+        //      RESET PASSWORD
+        // ==========================
         public bool ResetMatKhau(string email, string mk)
         {
             try
             {
-                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(mk))
-                {
+                if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(mk))
                     return false;
-                }
+
                 dalNhanVien.ResetMatKhau(mk, email);
                 return true;
             }
-            catch (Exception)
+            catch
             {
                 return false;
             }
         }
 
+        // ==========================
+        //      INSERT
+        // ==========================
         public string InsertNhanVien(NhanVien nv)
         {
             try
             {
                 nv.MaNV = dalNhanVien.generateMaNhanVien();
                 if (string.IsNullOrEmpty(nv.MaNV))
-                {
                     return "Mã nhân viên không hợp lệ.";
-                }
+
                 if (dalNhanVien.checkEmailExists(nv.Email))
-                {
                     return "Email đã tồn tại.";
-                }
+
                 dalNhanVien.insertNhanVien(nv);
                 return string.Empty;
             }
@@ -73,14 +88,15 @@ namespace BLL_QLKS
             }
         }
 
+        // ==========================
+        //      UPDATE
+        // ==========================
         public string UpdateNhanVien(NhanVien nv)
         {
             try
             {
                 if (string.IsNullOrEmpty(nv.MaNV))
-                {
                     return "Mã nhân viên không hợp lệ.";
-                }
 
                 dalNhanVien.updateNhanVien(nv);
                 return string.Empty;
@@ -91,14 +107,15 @@ namespace BLL_QLKS
             }
         }
 
+        // ==========================
+        //      DELETE
+        // ==========================
         public string DeleteNhanVien(string maNV)
         {
             try
             {
                 if (string.IsNullOrEmpty(maNV))
-                {
                     return "Mã nhân viên không hợp lệ.";
-                }
 
                 dalNhanVien.deleteNhanVien(maNV);
                 return string.Empty;
@@ -109,30 +126,12 @@ namespace BLL_QLKS
             }
         }
 
-
-
+        // ==========================
+        //      SELECT BY EMAIL
+        // ==========================
         public NhanVien GetNhanVienByEmail(string email)
         {
             return dalNhanVien.getNhanVienByEmail(email);
         }
-
-
-        //// Trong BLL_QLKS/BUSNhanVien.cs
-
-        //public NhanVien DangNhap(string username, string password)
-        //{
-        //    // Bổ sung xử lý Trim()
-        //    string trimmedUsername = username?.Trim();
-        //    string trimmedPassword = password?.Trim();
-
-        //    if (string.IsNullOrEmpty(trimmedUsername) || string.IsNullOrEmpty(trimmedPassword))
-        //    {
-        //        return null; // Xử lý TC04, 05, 06, 07, 08
-        //    }
-
-        //    // GỌI DAL VỚI GIÁ TRỊ ĐÃ ĐƯỢC XỬ LÝ
-        //    return dalNhanVien.getNhanVien(trimmedUsername, trimmedPassword);
-        //}
     }
-
 }
