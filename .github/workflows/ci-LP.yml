@@ -24,14 +24,14 @@ jobs:
           dotnet restore Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj
           dotnet build Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj --no-restore --configuration Release
           
-      - name: ▶️ Run Unit Tests (TRX + Coverage) — ONLY LOẠI PHÒNG
+      - name: ▶️ Run Unit Tests (TRX + Coverage) — ONLY TrangThaiDatPhong
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path TestResults -Force
           dotnet test Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj `
             --no-build `
             --configuration Release `
-            --filter "ClassName~LoaiPhong" `
+            --filter "ClassName~TrangThaiDatPhong" `
             --collect:"XPlat Code Coverage" `
             --logger "trx;LogFileName=QLKSTEST.trx" `
             --results-directory "TestResults"
