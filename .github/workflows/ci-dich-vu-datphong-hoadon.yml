@@ -1,0 +1,39 @@
+name: CI for DatPhong, LoaiDichVu, and HoaDon Tests
+
+on:
+  push:
+    branches: [ main ] 
+  pull_request:
+    branches: [ main ] 
+
+jobs:
+  build:
+    runs-on: windows-latest 
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x' 
+
+    - name: Restore dependencies
+      run: dotnet restore Xuong04_QLKS/Test_QLKS/Test_QLKS.csproj # <--- ĐƯỜNG DẪN MỚI
+
+    - name: Build
+      run: dotnet build Xuong04_QLKS/Test_QLKS/Test_QLKS.csproj --no-restore --configuration Release # <--- ĐƯỜNG DẪN MỚI
+
+    - name: Run Unit Tests (TRX + Coverage) — DatPhong, LoaiDichVu, HoaDon
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path TestResults -Force
+        dotnet test Xuong04_QLKS/Test_QLKS/Test_QLKS.csproj ` # <--- ĐƯỜNG DẪN MỚI
+          --no-build `
+          --configuration Release `
+          --filter "ClassName~TestDatPhong" `    # <--- CLASS TEST DAT PHONG
+          --filter "ClassName~LoaiDichVuTests" ` # <--- CLASS TEST LOAI DICH VU
+          --filter "ClassName~TestHoaDon" `      # <--- CLASS TEST HOA DON
+          --collect:"XPlat Code Coverage" `
+          --logger "trx;LogFileName=Test_QLKS.trx" ` # Đổi tên log file cho phù hợp
+          --results-directory "TestResults"
