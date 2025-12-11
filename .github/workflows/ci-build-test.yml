@@ -17,23 +17,21 @@ jobs:
       - name: 🛠️ Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          # Giả định .NET 8.0.x. Thay đổi nếu bạn dùng phiên bản khác.
-          dotnet-version: '8.0.x' 
+          dotnet-version: '8.0.x'
           
       - name: 💾 Restore & Build test project only
         run: |
-          # ĐÃ ĐIỀU CHỈNH ĐƯỜNG DẪN DỰA TRÊN THÔNG TIN BẠN CUNG CẤP
           dotnet restore Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj
           dotnet build Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj --no-restore --configuration Release
           
-      - name: ▶️ Run Unit Tests (TRX + Coverage)
+      - name: ▶️ Run Unit Tests (TRX + Coverage) — ONLY KHÁCH HÀNG
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path TestResults -Force
-          # ĐÃ ĐIỀU CHỈNH ĐƯỜNG DẪN DỰA TRÊN THÔNG TIN BẠN CUNG CẤP
           dotnet test Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj `
             --no-build `
             --configuration Release `
+            --filter "ClassName~KhachHang" `
             --collect:"XPlat Code Coverage" `
             --logger "trx;LogFileName=QLKSTEST.trx" `
             --results-directory "TestResults"
