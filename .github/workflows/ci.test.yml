@@ -31,7 +31,7 @@ jobs:
           dotnet test Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj `
             --no-build `
             --configuration Release `
-            --filter "ClassName~DichVu" `
+            --filter "FullyQualifiedName~DichVuTests" `
             --collect:"XPlat Code Coverage" `
             --logger "trx;LogFileName=QLKSTEST.trx" `
             --results-directory "TestResults"
