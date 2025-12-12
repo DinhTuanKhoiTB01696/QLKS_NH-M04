@@ -1,0 +1,69 @@
+name: CI - Unit Tests Only
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: windows-latest 
+    
+    steps:
+      - name: ⚙️ Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🛠️ Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: 💾 Restore & Build test project only
+        run: |
+          dotnet restore Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj
+          dotnet build Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj --no-restore --configuration Release
+          
+      - name: ▶️ Run Unit Tests (TRX + Coverage) — ONLY DỊCH VỤ
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path TestResults -Force
+          dotnet test Xuong04_QLKS/Xuong04_QLKS/QLKSTEST/QLKSTEST.csproj `
+            --no-build `
+            --configuration Release `
+            --filter "ClassName~DichVu" `
+            --collect:"XPlat Code Coverage" `
+            --logger "trx;LogFileName=QLKSTEST.trx" `
+            --results-directory "TestResults"
+            
+      - name: ⬆️ Upload test results
+        if: always() 
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          
+      - name: 📄 Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: 'TestResults/**/*.trx'
+          check_name: 'Unit Test Results - QLKS'
+          fail_on_failure: false
+          
+      - name: 📊 Generate Coverage Report
+        if: always()
+        shell: pwsh
+        run: |
+          $cov = Get-ChildItem -Path "TestResults" -Recurse -Include "coverage.cobertura.xml" | Select-Object -First 1
+          if ($cov) {
+            dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.10
+            reportgenerator -reports:"$($cov.FullName)" -targetdir:coveragereport -reporttypes:HtmlInline_AzurePipelines
+          }
+          
+      - name: ⬆️ Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coveragereport/**
